@@ -124,7 +124,7 @@ def main(args):
             match_found = False
             for vector in conf['folders']:
                 for matchstr in conf['folders'][vector]:
-                    if look_for_match(searchtext, matchstr):
+                    if look_for_match(searchtext, str(matchstr)):
                         # Prepend the vector name onto the filename and put it in the vector folder.
                         newdir = conf['target_folder'] + '/' + \
                           vector + '/'
