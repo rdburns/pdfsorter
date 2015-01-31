@@ -13,6 +13,7 @@ import shutil
 import re
 import os
 import sys
+from argparse import ArgumentParser
 
 try:
     from PyPDF2 import PdfFileReader
@@ -88,19 +89,11 @@ def get_date(text):
     
     import pdb; pdb.set_trace()
     return year, month
-     
-     
-if __name__ == "__main__":
+
+
+def main(args):
     
-    from optparse import OptionParser
-    parser = OptionParser(usage="pdfmover mappings.cfg /somedir/*.pdf")
-    parser.add_option("-d", "--dryrun", action="store_true", default=False, 
-                      help="Will not move files if set.")
-    (options, args) = parser.parse_args()
-    
-    #args[0] is config file, remaining args are files to move.
-    
-    mappings = read_ini_file(args[0])
+    mappings = read_ini_file(args.yaml_fn)
     print mappings
     
 
@@ -123,6 +116,19 @@ if __name__ == "__main__":
             if not match_found:
                 move_file(options.dryrun, filename, mappings[0][1]+'/', "No Match")
                     
+    
+     
+if __name__ == "__main__":
+    
+    parser = ArgumentParser(usage="pdfsorter [yaml file]")
+    parser.add_argument("yaml_fn", help="YAML file containing configuration.")
+    parser.add_argument("-d","--dryrun",action="store_true",default=False,
+                      help="Will not move files if set.")
+    args = parser.parse_args()
+    
+    #args[0] is config file, remaining args are files to move.
+
+    main(args)
             
             
       
