@@ -148,6 +148,10 @@ if __name__ == "__main__":
     root = logging.getLogger()
     root.setLevel(logging.INFO)
 
+    fh = logging.FileHandler('pdfsorter.log')
+    fh.setLevel(logging.DEBUG)
+    root.addHandler(fh)
+
     main(args)
             
             
