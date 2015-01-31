@@ -14,7 +14,7 @@ import re
 import os
 import sys
 import logging
-from pprint import pprint
+from pprint import pprint, pformat
 from argparse import ArgumentParser
 
 try:
@@ -75,7 +75,8 @@ def look_for_match(text, matchstr):
 def move_file(dryrun, oldfile, newfilename, status=""):
      """Moves oldfile to newfilename
      """
-     print "move_file()", oldfile, '->', newfilename, status
+     logging.info("move_file() " + oldfile + ' -> ' + \
+                  str(newfilename) + ' ' +  str(status))
      if not dryrun:
          shutil.move(oldfile, os.path.expanduser(newfilename))
 
@@ -105,29 +106,34 @@ def main(args):
 
     with open(args.yaml_fn, 'r') as f:
         conf = yaml.load(f)
-    pprint(conf)
+    logging.debug(pformat(conf))
 
     logging.info("Looking for PDFs in " + conf['watch_folder'])
-    sys.exit(0)
+    pdf_fns = glob.glob(conf['watch_folder'] + '/*.pdf')
 
-    for filename in args[1:]:
-        pagetext = pdf2text(filename) 
+    logging.info("Processing files: " + str(pdf_fns))
+    
+    for filename in pdf_fns:
+        pagetext = pdf2text(filename)
+        searchtext = '\n'.join(pagetext).lower()
         if pagetext[0] == u'':
-            #This PDF has no OCRed text in it.
-            move_file(options.dryrun, filename, mappings[0][1]+'/', "No Text")
+            logging.info(filename + " has no OCRed text in it.")
+            move_file(args.dryrun, filename, conf['default_folder'], "No Text")
         else:
-            
-            #import pdb; pdb.set_trace()
             match_found = False
-            for mapping in mappings:
-                searchtext = '\n'.join(pagetext).lower()
-                if look_for_match(searchtext, mapping[0]):
-                    newfilename = mapping[1]+'/'+os.path.basename(mapping[1])+'_'+os.path.basename(filename)
-                    move_file(options.dryrun, filename, newfilename)
-                    match_found = True
-                    break
+            for vector in conf['folders']:
+                for matchstr in conf['folders'][vector]:
+                    if look_for_match(searchtext, matchstr):
+                        # Prepend the vector name onto the filename and put it in the vector folder.
+                        newfilename = conf['target_folder'] + '/' + \
+                          os.path.basename(vector) + '_' + \
+                          os.path.basename(filename)
+                        move_file(args.dryrun, filename, newfilename)
+                        match_found = True
+                        break
+                if match_found: break
             if not match_found:
-                move_file(options.dryrun, filename, mappings[0][1]+'/', "No Match")
+                move_file(args.dryrun, filename, conf['default_folder']+'/', "No Match")
                     
     
      
