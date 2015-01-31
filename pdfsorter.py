@@ -13,13 +13,23 @@ import shutil
 import re
 import os
 import sys
+import logging
+from pprint import pprint
 from argparse import ArgumentParser
+
+try:
+    import yaml
+except ImportError:
+    print "You must install PyYAML to use this script."
+    print "Try pip install PyYAML"
+    sys.exit(1)
 
 try:
     from PyPDF2 import PdfFileReader
 except ImportError:
     print "Requires pyPDF library"
     print "http://pybrary.net/pyPdf/"
+    print "Try pip install PyPDF2"
     sys.exit(1)
     
     
@@ -92,10 +102,13 @@ def get_date(text):
 
 
 def main(args):
-    
-    mappings = read_ini_file(args.yaml_fn)
-    print mappings
-    
+
+    with open(args.yaml_fn, 'r') as f:
+        conf = yaml.load(f)
+    pprint(conf)
+
+    logging.info("Looking for PDFs in " + conf['watch_folder'])
+    sys.exit(0)
 
     for filename in args[1:]:
         pagetext = pdf2text(filename) 
@@ -126,7 +139,8 @@ if __name__ == "__main__":
                       help="Will not move files if set.")
     args = parser.parse_args()
     
-    #args[0] is config file, remaining args are files to move.
+    root = logging.getLogger()
+    root.setLevel(logging.INFO)
 
     main(args)
             
