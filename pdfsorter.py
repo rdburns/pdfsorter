@@ -126,7 +126,7 @@ def main(args):
                     if look_for_match(searchtext, matchstr):
                         # Prepend the vector name onto the filename and put it in the vector folder.
                         newfilename = conf['target_folder'] + '/' + \
-                          os.path.basename(vector) + '_' + \
+                          vector + '/' + vector + '_' + \
                           os.path.basename(filename)
                         move_file(args.dryrun, filename, newfilename)
                         match_found = True
