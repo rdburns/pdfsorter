@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 #
+# Ryan Burns <rdburns@gmail.com>
+#
 # Scans PDF file text for keywords and moves file to appropriate directory.
 # Takes text / dir names from an ini file
 #
