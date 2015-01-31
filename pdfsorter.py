@@ -13,12 +13,23 @@ import shutil
 import re
 import os
 import sys
+import logging
+from pprint import pprint, pformat
+from argparse import ArgumentParser
+
+try:
+    import yaml
+except ImportError:
+    print "You must install PyYAML to use this script."
+    print "Try pip install PyYAML"
+    sys.exit(1)
 
 try:
     from PyPDF2 import PdfFileReader
 except ImportError:
     print "Requires pyPDF library"
     print "http://pybrary.net/pyPdf/"
+    print "Try pip install PyPDF2"
     sys.exit(1)
     
     
@@ -64,7 +75,9 @@ def look_for_match(text, matchstr):
 def move_file(dryrun, oldfile, newfilename, status=""):
      """Moves oldfile to newfilename
      """
-     print "move_file()", oldfile, '->', newfilename, status
+     logging.info("move_file() " + oldfile + ' -> ' + \
+                  str(newfilename) + ' ' +  str(status))
+     logging.info("Dry_run: " + str(dryrun))
      if not dryrun:
          shutil.move(oldfile, os.path.expanduser(newfilename))
 
@@ -88,41 +101,63 @@ def get_date(text):
     
     import pdb; pdb.set_trace()
     return year, month
-     
+
+
+def main(args):
+
+    with open(args.yaml_fn, 'r') as f:
+        conf = yaml.load(f)
+    logging.debug(pformat(conf))
+
+    logging.info("Looking for PDFs in " + conf['watch_folder'])
+    pdf_fns = glob.glob(conf['watch_folder'] + '/*.pdf')
+
+    logging.info("Processing files: " + str(pdf_fns))
+    
+    for filename in pdf_fns:
+        pagetext = pdf2text(filename)
+        searchtext = '\n'.join(pagetext).lower()
+        if pagetext[0] == u'':
+            logging.info(filename + " has no OCRed text in it.")
+            move_file(args.dryrun, filename, conf['default_folder'], "No Text")
+        else:
+            match_found = False
+            for vector in conf['folders']:
+                for matchstr in conf['folders'][vector]:
+                    if look_for_match(searchtext, matchstr):
+                        # Prepend the vector name onto the filename and put it in the vector folder.
+                        newdir = conf['target_folder'] + '/' + \
+                          vector + '/'
+                        newfilename = newdir + vector + '_' + \
+                          os.path.basename(filename)
+                        if not os.path.exists(newdir):
+                            logging.debug('Making directory ' + newdir)
+                            os.makedirs(newdir)  
+                        move_file(args.dryrun, filename, newfilename)
+                        match_found = True
+                        break
+                if match_found: break
+            if not match_found:
+                move_file(args.dryrun, filename, conf['default_folder']+'/', "No Match")
+                    
+    
      
 if __name__ == "__main__":
     
-    from optparse import OptionParser
-    parser = OptionParser(usage="pdfmover mappings.cfg /somedir/*.pdf")
-    parser.add_option("-d", "--dryrun", action="store_true", default=False, 
+    parser = ArgumentParser(usage="pdfsorter [yaml file]")
+    parser.add_argument("yaml_fn", help="YAML file containing configuration.")
+    parser.add_argument("-d","--dryrun",action="store_true",default=False,
                       help="Will not move files if set.")
-    (options, args) = parser.parse_args()
+    args = parser.parse_args()
     
-    #args[0] is config file, remaining args are files to move.
-    
-    mappings = read_ini_file(args[0])
-    print mappings
-    
+    root = logging.getLogger()
+    root.setLevel(logging.INFO)
 
-    for filename in args[1:]:
-        pagetext = pdf2text(filename) 
-        if pagetext[0] == u'':
-            #This PDF has no OCRed text in it.
-            move_file(options.dryrun, filename, mappings[0][1]+'/', "No Text")
-        else:
-            
-            #import pdb; pdb.set_trace()
-            match_found = False
-            for mapping in mappings:
-                searchtext = '\n'.join(pagetext).lower()
-                if look_for_match(searchtext, mapping[0]):
-                    newfilename = mapping[1]+'/'+os.path.basename(mapping[1])+'_'+os.path.basename(filename)
-                    move_file(options.dryrun, filename, newfilename)
-                    match_found = True
-                    break
-            if not match_found:
-                move_file(options.dryrun, filename, mappings[0][1]+'/', "No Match")
-                    
+    fh = logging.FileHandler('pdfsorter.log')
+    fh.setLevel(logging.DEBUG)
+    root.addHandler(fh)
+
+    main(args)
             
             
       
