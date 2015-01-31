@@ -77,6 +77,7 @@ def move_file(dryrun, oldfile, newfilename, status=""):
      """
      logging.info("move_file() " + oldfile + ' -> ' + \
                   str(newfilename) + ' ' +  str(status))
+     logging.info("Dry_run: " + str(dryrun))
      if not dryrun:
          shutil.move(oldfile, os.path.expanduser(newfilename))
 
@@ -125,9 +126,13 @@ def main(args):
                 for matchstr in conf['folders'][vector]:
                     if look_for_match(searchtext, matchstr):
                         # Prepend the vector name onto the filename and put it in the vector folder.
-                        newfilename = conf['target_folder'] + '/' + \
-                          vector + '/' + vector + '_' + \
+                        newdir = conf['target_folder'] + '/' + \
+                          vector + '/'
+                        newfilename = newdir + vector + '_' + \
                           os.path.basename(filename)
+                        if not os.path.exists(newdir):
+                            logging.debug('Making directory ' + newdir)
+                            os.makedirs(newdir)  
                         move_file(args.dryrun, filename, newfilename)
                         match_found = True
                         break
