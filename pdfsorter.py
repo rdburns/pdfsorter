@@ -31,7 +31,8 @@ def pdf2text(filename):
     for pn in range(numpages):
         pagetext.append(pdf.getPage(pn).extractText())
     return pagetext
-        
+
+
 def read_ini_file(filename):
     """Reads INI file to get match/dest pairs
     The file format expected is one [Main] section followed by a series of 
@@ -49,50 +50,53 @@ def read_ini_file(filename):
     config = ConfigParser.ConfigParser()
     config.read(filename)
     return config.items('Main')
-     
-def look_for_match(text,matchstr):
+
+
+def look_for_match(text, matchstr):
      """Looks for matchstr in text, returns True if found
      """
-     if string.find(text,matchstr) != -1:
+     if string.find(text, matchstr) != -1:
          return True
      else:
          return False
+
      
-def move_file(dryrun,oldfile,newfilename,status=""):
+def move_file(dryrun, oldfile, newfilename, status=""):
      """Moves oldfile to newfilename
      """
-     print "move_file()",oldfile,'->',newfilename,status
+     print "move_file()", oldfile, '->', newfilename, status
      if not dryrun:
-         shutil.move(oldfile,os.path.expanduser(newfilename))
-      
+         shutil.move(oldfile, os.path.expanduser(newfilename))
+
+         
 def get_date(text):
     """Returns year and month numeral from file contents
     This doesn't work very well, as all the files are different.
     """
-    yearmatch = re.search("(20[0-9][0-9])",text)
+    yearmatch = re.search("(20[0-9][0-9])", text)
     #Take first match we find
     if yearmatch:
         year = yearmatch.group(0)
     else:
         year = "YYYY"
     
-    monthmatch = re.search('(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]',text,re.I)
+    monthmatch = re.search('(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]', text, re.I)
     if monthmatch:
         month = monthmatch.group(0)
     else:
         month = "MM"
     
     import pdb; pdb.set_trace()
-    return year,month
+    return year, month
      
      
 if __name__ == "__main__":
     
     from optparse import OptionParser
     parser = OptionParser(usage="pdfmover mappings.cfg /somedir/*.pdf")
-    parser.add_option("-d","--dryrun",action="store_true",default=False,
+    parser.add_option("-d", "--dryrun", action="store_true", default=False, 
                       help="Will not move files if set.")
-    (options,args) = parser.parse_args()
+    (options, args) = parser.parse_args()
     
     #args[0] is config file, remaining args are files to move.
     
@@ -104,20 +108,20 @@ if __name__ == "__main__":
         pagetext = pdf2text(filename) 
         if pagetext[0] == u'':
             #This PDF has no OCRed text in it.
-            move_file(options.dryrun,filename,mappings[0][1]+'/',"No Text")
+            move_file(options.dryrun, filename, mappings[0][1]+'/', "No Text")
         else:
             
             #import pdb; pdb.set_trace()
             match_found = False
             for mapping in mappings:
                 searchtext = '\n'.join(pagetext).lower()
-                if look_for_match(searchtext,mapping[0]):
+                if look_for_match(searchtext, mapping[0]):
                     newfilename = mapping[1]+'/'+os.path.basename(mapping[1])+'_'+os.path.basename(filename)
-                    move_file(options.dryrun,filename,newfilename)
+                    move_file(options.dryrun, filename, newfilename)
                     match_found = True
                     break
             if not match_found:
-                move_file(options.dryrun,filename,mappings[0][1]+'/',"No Match")
+                move_file(options.dryrun, filename, mappings[0][1]+'/', "No Match")
                     
             
             
