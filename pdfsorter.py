@@ -144,7 +144,7 @@ def main(args):
      
 if __name__ == "__main__":
     
-    parser = ArgumentParser(usage="pdfsorter [yaml file]")
+    parser = ArgumentParser(description="Sorts OCR'd PDF files to a new location by searching the text in them for keywords.")
     parser.add_argument("yaml_fn", help="YAML file containing configuration.")
     parser.add_argument("-d","--dryrun",action="store_true",default=False,
                       help="Will not move files if set.")
