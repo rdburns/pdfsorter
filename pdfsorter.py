@@ -6,7 +6,7 @@
 # Takes text / dir names from an ini file
 #
 
-import ConfigParser
+import configparser
 import glob
 import string
 import shutil
@@ -20,16 +20,16 @@ from argparse import ArgumentParser
 try:
     import yaml
 except ImportError:
-    print "You must install PyYAML to use this script."
-    print "Try pip install PyYAML"
+    print("You must install PyYAML to use this script.")
+    print("Try pip install PyYAML")
     sys.exit(1)
 
 try:
     from PyPDF2 import PdfFileReader
 except ImportError:
-    print "Requires pyPDF library"
-    print "http://pybrary.net/pyPdf/"
-    print "Try pip install PyPDF2"
+    print("Requires pyPDF library")
+    print("http://pybrary.net/pyPdf/")
+    print("Try pip install PyPDF2")
     sys.exit(1)
     
     
@@ -58,7 +58,7 @@ def read_ini_file(filename):
     It is assumed "nomatch" won't occur in any target file.
     
     """
-    config = ConfigParser.ConfigParser()
+    config = configparser.ConfigParser()
     config.read(filename)
     return config.items('Main')
 
@@ -117,7 +117,7 @@ def main(args):
     for filename in pdf_fns:
         pagetext = pdf2text(filename)
         searchtext = '\n'.join(pagetext).lower()
-        if pagetext[0] == u'':
+        if pagetext[0] == '':
             logging.info(filename + " has no OCRed text in it.")
             move_file(args.dryrun, filename, conf['default_folder'], "No Text")
         else:
