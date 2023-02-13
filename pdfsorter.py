@@ -6,7 +6,7 @@
 # Takes text / dir names from an ini file
 #
 
-import ConfigParser
+import configparser
 import glob
 import string
 import shutil
@@ -18,18 +18,19 @@ from pprint import pprint, pformat
 from argparse import ArgumentParser
 
 try:
-    import yaml
+    from yaml import load, Loader
 except ImportError:
-    print "You must install PyYAML to use this script."
-    print "Try pip install PyYAML"
+    print("PyYAML required to use this script.")
+    print("https://pypi.org/project/PyYAML/")
+    print("Try pip install PyYAML")
     sys.exit(1)
 
 try:
-    from PyPDF2 import PdfFileReader
+    from pypdf import PdfReader
 except ImportError:
-    print "Requires pyPDF library"
-    print "http://pybrary.net/pyPdf/"
-    print "Try pip install PyPDF2"
+    print("pydf required to use this script.")
+    print("https://pypi.org/project/pypdf/")
+    print("Try pip install pypdf")
     sys.exit(1)
     
     
@@ -37,10 +38,10 @@ def pdf2text(filename):
     """Open PDF file and extract all text as a giant string for each page in a list.
     """
     pagetext = []
-    pdf = PdfFileReader(file(filename, "rb"))
-    numpages = pdf.getNumPages()
+    pdf = PdfReader(filename)
+    numpages = len(pdf.pages)
     for pn in range(numpages):
-        pagetext.append(pdf.getPage(pn).extractText())
+        pagetext.append(pdf.pages[pn].extract_text())
     return pagetext
 
 
@@ -58,7 +59,7 @@ def read_ini_file(filename):
     It is assumed "nomatch" won't occur in any target file.
     
     """
-    config = ConfigParser.ConfigParser()
+    config = configparser.ConfigParser()
     config.read(filename)
     return config.items('Main')
 
@@ -66,7 +67,7 @@ def read_ini_file(filename):
 def look_for_match(text, matchstr):
      """Looks for matchstr in text, returns True if found
      """
-     if string.find(text, matchstr) != -1:
+     if text.find(matchstr.lower()) != -1:
          return True
      else:
          return False
@@ -106,8 +107,13 @@ def get_date(text):
 def main(args):
 
     with open(args.yaml_fn, 'r') as f:
-        conf = yaml.load(f)
+        conf = load(f, Loader=Loader)
     logging.debug(pformat(conf))
+
+    defaultdir = conf['default_folder'] + '/'
+    if not os.path.exists(defaultdir):
+        logging.debug('Making directory ' + defaultdir)
+        os.makedirs(defaultdir)  
 
     logging.info("Looking for PDFs in " + conf['watch_folder'])
     pdf_fns = glob.glob(conf['watch_folder'] + '/*.pdf')
@@ -117,7 +123,7 @@ def main(args):
     for filename in pdf_fns:
         pagetext = pdf2text(filename)
         searchtext = '\n'.join(pagetext).lower()
-        if pagetext[0] == u'':
+        if pagetext[0] == '':
             logging.info(filename + " has no OCRed text in it.")
             move_file(args.dryrun, filename, conf['default_folder'], "No Text")
         else:
@@ -144,7 +150,7 @@ def main(args):
      
 if __name__ == "__main__":
     
-    parser = ArgumentParser(description="Sorts OCR'd PDF files to a new location by searching the text in them for keywords.")
+    parser = ArgumentParser(description="Sorts PDF files to several directories by searching the text in them for keywords.")
     parser.add_argument("yaml_fn", help="YAML file containing configuration.")
     parser.add_argument("-d","--dryrun",action="store_true",default=False,
                       help="Will not move files if set.")

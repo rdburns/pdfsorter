@@ -1,19 +1,18 @@
 # pdfsorter
-Sorts OCR'd PDF files to a new location by searching the text in them for keywords.
+Sorts PDF files to several directories by searching the text in them for keywords.
 
 Used similar YAML file format to PyPDFOCR, but only doing my own file sorting, 
 since some scanners come with OCR software that is superior to tesseract.
 
 # Dependencies
 * PyYAML
-* PyPDF2
+* pypdf
 
 # Usage
 
     usage: pdfsorter.py [-h] [-d] yaml_fn
     
-    Sorts OCR'd PDF files to a new location by searching the text in them for
-    keywords.
+    Sorts PDF files to several directories by searching the text in them for keywords.
     
     positional arguments:
       yaml_fn       YAML file containing configuration.
